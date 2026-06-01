@@ -49,6 +49,7 @@ function GameWorld() {
 
   this.gameOver = false;
 }
+
 /*
 ** REFATORAÇÃO 3: Replace Conditional with Lookup
 **
