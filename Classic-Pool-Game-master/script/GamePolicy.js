@@ -287,7 +287,7 @@ GamePolicy.prototype.initiateState = function (policyState) {
 ** Foi extraído o método que reinicia a partida devido a uma duplicação em uma cláusula 
 ** if na função updateTurnOutcome()
 ** 
-** Antes:
+** Código original:
 
 
     if(this.won){        
@@ -327,7 +327,7 @@ GamePolicy.prototype.initiateState = function (policyState) {
 
 **
 **
-** A nova função restartMatch() está abaixo:
+** Nova função refatorada:
 */
 
 GamePolicy.prototype.restartMatch = function () {
