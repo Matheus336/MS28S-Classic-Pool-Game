@@ -47,12 +47,14 @@ GamePolicy.prototype.reset = function () {
   this.firstCollision = true;
   this.validBallsInsertedOnTurn = 0;
 };
+
 GamePolicy.prototype.drawScores = function () {
   Canvas2D.drawText(
     "PLAYER " + (this.turn + 1),
     new Vector2(Game.size.x / 2 + 40, 200),
     new Vector2(150, 0),
-    "#096834",
+    // Alteração da cor do texto do placar para melhor visualização
+    "#068740",
     "top",
     "Impact",
     "70px",
