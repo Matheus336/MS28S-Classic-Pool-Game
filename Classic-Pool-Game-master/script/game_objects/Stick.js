@@ -16,8 +16,8 @@ function Stick(position) {
 
 /*
  **
- ** Feature 1: Alteração da mecânica de carregamento da força
- ** Ao teclar W é pressionada, a força começa a aumentar gradualmente, oscilando entre 0 e 100.
+ ** Feature 1: Alteração da mecânica de tacada
+ ** Ao teclar W, a força começa a aumentar gradualmente, oscilando entre 0 e 100.
  ** O jogador pode soltar a tecla W a qualquer momento para disparar a bola com a força atual.
  **
  ** Função handleInput() refeita:
