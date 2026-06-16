@@ -225,6 +225,170 @@ GameWorld.prototype.handleCollision = function (ball1, ball2, delta) {
   }
 };
 
+/* Feature 4: Implementação da mira prévia da jogada
+ **
+ ** Foi elaborado novas funções para traçar linhas e círculos no jogo em Canvas2D.js,
+ ** Essas funções são aplicadas nas funções de colisão entre as bolas
+ **
+ */
+
+GameWorld.prototype.shouldDrawAimGuide = function () {
+  return (
+    this.stick.visible &&
+    !Game.policy.turnPlayed &&
+    !this.ballsMoving() &&
+    !Game.policy.foul &&
+    !(AI_ON && Game.policy.turn === AI_PLAYER_NUM)
+  );
+};
+
+GameWorld.prototype.getAimCollision = function () {
+  var whiteBall = this.whiteBall;
+  var direction = new Vector2(
+    Math.cos(this.stick.rotation),
+    Math.sin(this.stick.rotation),
+  );
+  var closestCollision = undefined;
+
+  for (var i = 0; i < this.balls.length; i++) {
+    var ball = this.balls[i];
+
+    if (ball === whiteBall || ball.inHole || !ball.visible) {
+      continue;
+    }
+
+    var toBall = ball.position.subtract(whiteBall.position);
+    var projection = toBall.x * direction.x + toBall.y * direction.y;
+
+    if (projection <= 0) {
+      continue;
+    }
+
+    var distanceToPathSquared =
+      toBall.x * toBall.x + toBall.y * toBall.y - projection * projection;
+    var collisionRadius = BALL_SIZE;
+
+    if (distanceToPathSquared > collisionRadius * collisionRadius) {
+      continue;
+    }
+
+    var distanceToCollision =
+      projection -
+      Math.sqrt(collisionRadius * collisionRadius - distanceToPathSquared);
+
+    if (distanceToCollision < 0) {
+      continue;
+    }
+
+    if (!closestCollision || distanceToCollision < closestCollision.distance) {
+      closestCollision = {
+        ball: ball,
+        distance: distanceToCollision,
+        contactPosition: whiteBall.position.add(
+          direction.multiply(distanceToCollision),
+        ),
+      };
+    }
+  }
+
+  return closestCollision;
+};
+
+GameWorld.prototype.getAimGuideBorderEnd = function (
+  start,
+  direction,
+  distanceLimit,
+) {
+  var endDistance = distanceLimit;
+  var ballOrigin = new Vector2(25, 25);
+  var minX = Game.policy.leftBorderX + ballOrigin.x;
+  var maxX = Game.policy.rightBorderX - ballOrigin.x;
+  var minY = Game.policy.topBorderY + ballOrigin.y;
+  var maxY = Game.policy.bottomBorderY - ballOrigin.y;
+
+  if (direction.x > 0) {
+    endDistance = Math.min(endDistance, (maxX - start.x) / direction.x);
+  } else if (direction.x < 0) {
+    endDistance = Math.min(endDistance, (minX - start.x) / direction.x);
+  }
+
+  if (direction.y > 0) {
+    endDistance = Math.min(endDistance, (maxY - start.y) / direction.y);
+  } else if (direction.y < 0) {
+    endDistance = Math.min(endDistance, (minY - start.y) / direction.y);
+  }
+
+  return start.add(direction.multiply(Math.max(0, endDistance)));
+};
+
+GameWorld.prototype.drawAimGuide = function () {
+  if (!this.shouldDrawAimGuide()) {
+    return;
+  }
+
+  var collision = this.getAimCollision();
+  var whiteBall = this.whiteBall;
+  var direction = new Vector2(
+    Math.cos(this.stick.rotation),
+    Math.sin(this.stick.rotation),
+  );
+
+  if (!collision) {
+    var freeEnd = this.getAimGuideBorderEnd(whiteBall.position, direction, 700);
+    Canvas2D.drawLine(
+      whiteBall.position,
+      freeEnd,
+      "#FFFFFF",
+      3,
+      0.42,
+      [14, 12],
+    );
+    return;
+  }
+
+  var objectDirection = collision.ball.position.subtract(
+    collision.contactPosition,
+  );
+  objectDirection.normalize();
+
+  var targetEnd = this.getAimGuideBorderEnd(
+    collision.ball.position,
+    objectDirection,
+    520,
+  );
+
+  Canvas2D.drawLine(
+    whiteBall.position,
+    collision.contactPosition,
+    "#FFFFFF",
+    3,
+    0.65,
+    [15, 10],
+  );
+  Canvas2D.drawCircle(
+    collision.contactPosition,
+    BALL_SIZE / 2,
+    "#FFFFFF",
+    2,
+    0.45,
+  );
+  Canvas2D.drawLine(
+    collision.ball.position,
+    targetEnd,
+    "#FFD451",
+    4,
+    0.74,
+    [18, 10],
+  );
+  Canvas2D.drawCircle(
+    collision.ball.position,
+    BALL_SIZE / 2,
+    "#FFD451",
+    2,
+    0.5,
+  );
+};
+
 GameWorld.prototype.draw = function () {
   Canvas2D.drawImage(sprites.background);
   Game.policy.drawScores();
@@ -233,6 +397,7 @@ GameWorld.prototype.draw = function () {
     this.balls[i].draw();
   }
 
+  this.drawAimGuide();
   this.stick.draw();
 };
 
